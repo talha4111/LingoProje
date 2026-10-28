@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LingoReader AI - Akıllı İngilizce Öğrenme Platformu</title>
+    
+    <!-- PDF.js & FontAwesome & Google Fonts & Marked (Markdown) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #e0e7ff;
+            --bg-gradient: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #fdf4ff 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --card-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.08), 0 8px 10px -6px rgba(99, 102, 241, 0.04);
+            --text: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text);
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* NAVİGASYON */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .brand-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-right: 25px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn {
+            padding: 10px 24px;
+            border: 2px solid transparent;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.08);
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        }
+        
+        .tab-content {
+            display: none;
+            max-width: 1280px;
+            margin: 25px auto;
+            padding: 0 20px;
+            gap: 25px;
+        }
+        .tab-content.active {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: var(--card-shadow);
+            flex: 1;
+            min-width: 320px;
+        }
+
+        /* KONTROL ELEMANLARI */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            background: white;
+            transition: border-color 0.2s;
+        }
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        
+        .action-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+        .speed-control {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 6px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #cbd5e1;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* METİN VE SÖZLÜK */
+        #story-container {
+            line-height: 2.3;
+            font-size: 1.15rem;
+            min-height: 320px;
+            padding: 24px;
+            background: white;
+            border-radius: 14px;
+            white-space: pre-wrap;
+            border: 1.5px solid #e2e8f0;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+        .word {
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 5px;
+            transition: all 0.15s ease;
+            display: inline-block;
+        }
+        .word:hover {
+            background: #e0e7ff;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .active-word {
+            background: #dcfce7 !important;
+            border-bottom: 2px solid #22c55e;
+            color: #166534 !important;
+            font-weight: 600;
+        }
+        
+        #preview-box {
+            padding: 16px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            border-left: 5px solid var(--primary);
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+            min-height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .vocab-list {
+            list-style: none;
+            padding: 0;
+            max-height: 380px;
+            overflow-y: auto;
+            margin: 0 0 15px 0;
+        }
+        .vocab-item {
+            background: white;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.15s;
+        }
+        .vocab-item:hover {
+            transform: translateX(3px);
+            border-color: #cbd5e1;
+        }
+        .vocab-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .mini-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+        .mini-btn:hover {
+            background: #f1f5f9;
+            color: var(--primary);
+        }
+
+        /* KARAOKE & VİDEO */
+        .lyric-line {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            transition: all 0.25s ease;
+            color: #475569;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            border: 1px solid #f1f5f9;
+        }
+        .lyric-line:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .lyric-line.active-line {
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.12);
+        }
+        .lyric-play-btn {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .lyric-play-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+        .lyric-text {
+            flex: 1;
+            line-height: 1.8;
+        }
+
+        /* AI ROBOT WIDGET & CHAT */
+        #ai-widget {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border-radius: 50%;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            border: 3px solid white;
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+        }
+        #ai-widget:hover {
+            transform: scale(1.08);
+            box-shadow: 0 14px 30px rgba(99, 102, 241, 0.5);
+        }
+        #ai-widget:active { cursor: grabbing; }
+
+        #chat-window {
+            position: fixed;
+            bottom: 105px;
+            right: 28px;
+            width: 380px;
+            height: 540px;
+            max-width: calc(100vw - 40px);
+            max-height: calc(100vh - 140px);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+            z-index: 9998;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            animation: popIn 0.25s ease-out;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(15px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 14px 18px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+        }
+        .chat-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-icon-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .header-icon-btn:hover { background: rgba(255, 255, 255, 0.35); }
+
+        .chat-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #f8fafc;
+            font-size: 0.92rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .msg {
+            padding: 12px 15px;
+            border-radius: 14px;
+            max-width: 88%;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .msg p { margin: 0 0 8px 0; }
+        .msg p:last-child { margin-bottom: 0; }
+        .msg ul, .msg ol { margin: 6px 0 6px 18px; padding: 0; }
+        .msg code { background: rgba(0,0,0,0.06); padding: 2px 5px; border-radius: 4px; font-size: 0.85em; }
+        .msg.user {
+            background: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .msg.bot {
+            background: white;
+            color: #1e293b;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #f1f5f9;
+        }
+        .msg.bot.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Hızlı Şablon Butonları */
+        .chat-chips {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 8px 12px;
+            background: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .chat-chips::-webkit-scrollbar { height: 4px; }
+        .chip {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chip:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .chat-input-area {
+            padding: 10px 14px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .chat-input-area input {
+            margin-bottom: 0;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+        }
+
+        /* YÜKLENİYOR / SPINNER */
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 12px;
+            align-self: flex-start;
+            border: 1px solid #e2e8f0;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: blink 1.2s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%, 100% { opacity: 0.2; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+
+        /* API KEY MODAL */
+        #api-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 26px;
+            border-radius: 18px;
+            width: 440px;
+            max-width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ÜST NAVİGASYON -->
+    <nav class="nav-tabs">
+        <div class="brand-title">
+            <i class="fa-solid fa-graduation-cap"></i> LingoReader AI
+        </div>
+        <button class="tab-btn active" onclick="switchTab('read')">
+            <i class="fa-solid fa-book-open"></i> Okuma & Hikaye
+        </button>
+        <button class="tab-btn" onclick="switchTab('music')">
+            <i class="fa-solid fa-music"></i> AI Karaoke
+        </button>
+        <div style="margin-left: auto; display: flex; gap: 8px;">
+            <button class="action-btn" style="background: white; color: #475569; border: 1.5px solid #cbd5e1;" onclick="openApiKeyModal()">
+                <i class="fa-solid fa-key"></i> <span id="api-status-badge">API Anahtarı</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 1. OKUMA VE ÇALIŞMA SEKMESİ -->
+    <div id="read-tab" class="tab-content active">
+        <div class="glass-panel" style="flex: 2.8;">
+            <div class="panel-header">
+                <h3 class="panel-title"><i class="fa-regular fa-file-lines" style="color: var(--primary);"></i> Metin & Hikaye Okuyucu</h3>
+                <div style="display: flex; gap: 8px;">
+                    <button class="action-btn" style="background:#0284c7;" onclick="askAIToSummarize()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Hikayeyi Açıkla
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+                <button class="action-btn" onclick="document.getElementById('pdf-input').click()">
+                    <i class="fa-solid fa-file-pdf"></i> PDF Yükle
+                </button>
+                <button class="action-btn" style="background:#10b981;" onclick="processContent()">
+                    <i class="fa-solid fa-check"></i> Ayrıştır & Hazırla
+                </button>
+                <button class="action-btn" style="background:#f59e0b;" onclick="toggleSpeech(false)">
+                    <i id="speak-icon" class="fa-solid fa-play"></i> <span id="speak-text">Dinle</span>
+                </button>
+                <button class="action-btn" style="background:#64748b;" onclick="resetReadingPosition()" title="Başa Sar">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <div class="speed-control">
+                    <span>Hız:</span>
+                    <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.25" value="1.0" oninput="document.getElementById('speed-label').innerText = this.value + 'x'">
+                    <span id="speed-label">1.0x</span>
+                </div>
+                <input type="file" id="pdf-input" accept=".pdf" style="display:none" onchange="loadPDF(event)">
+            </div>
+
+            <textarea id="input-text" rows="4" placeholder="İngilizce bir hikaye veya metin yapıştırın ya da yukarıdan PDF yükleyin..." oninput="resetReadingPosition()"></textarea>
+            
+            <div id="story-container">Metni buraya yapıştırıp "Ayrıştır & Hazırla" butonuna basın. Ardından bilmediğiniz kelimelere tıklayarak anlamını öğrenin veya dinleyin.</div>
+        </div>
+
+        <div class="glass-panel" style="flex: 1.2;">
+            <div class="panel-header">
+                <h4 class="panel-title"><i class="fa-solid fa-book-bookmark" style="color: #f59e0b;"></i> Kelime & Sözlük</h4>
+            </div>
+            
+            <div id="preview-box">
+                <span id="preview-text">Metindeki bir kelimeye tıklayın...</span>
+                <button id="ask-tutor-btn" class="mini-btn" style="display:none; color: var(--primary); font-weight:700;" onclick="askTutorCurrentWord()">
+                    🤖 Hocaya Sor
+                </button>
+            </div>
+
+            <ul id="vocab-list" class="vocab-list"></ul>
+
+            <button class="action-btn" style="width:100%; background:#ef4444; justify-content: center;" onclick="clearList()">
+                <i class="fa-solid fa-trash-can"></i> Sözlüğü Temizle
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. AI KARAOKE SEKMESİ -->
+    <div id="music-tab" class="tab-content">
+        <div class="glass-panel" style="flex: 2.8;">
+            <div class="panel-header">
+                <h3 class="panel-title"><i class="fa-brands fa-youtube" style="color: #ef4444;"></i> AI Müzik & Transkript (Karaoke)</h3>
+                <span style="font-size: 0.85rem; color: var(--text-muted); background: white; padding: 6px 12px; border-radius: 999px; border: 1px solid #e2e8f0;">
+                    <i class="fa-solid fa-circle-info" style="color: var(--primary);"></i> Kelimeye tıkla: <b>Çevir</b> | Çift tıkla veya <i class="fa-solid fa-play" style="font-size:0.75rem; color:var(--primary);"></i>: <b>Oynat</b>
+                </span>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 18px;">
+                <input type="text" id="yt-url" placeholder="YouTube Video veya Şarkı Linki (örn: https://www.youtube.com/watch?v=...)">
+                <button id="ai-btn" class="action-btn" style="background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); min-width: 140px; justify-content: center;" onclick="analyzeWithAI()">
+                    <i class="fa-solid fa-sparkles"></i> Analiz Et
+                </button>
+            </div>
+
+            <div id="karaoke-loader" style="display: none; padding: 20px; text-align: center; color: var(--primary); font-weight: 600;">
+                <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+                <p style="margin-top: 10px;">Şarkı indiriliyor ve Whisper AI ile transkript çıkarılıyor... Lütfen bekleyin.</p>
+            </div>
+
+            <div id="video-wrapper" style="display:none; position: relative; padding-bottom: 56.25%; height: 0; margin-bottom: 20px; border-radius: 16px; overflow: hidden; box-shadow: var(--card-shadow);">
+                <div id="yt-player" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+            </div>
+
+            <div id="lyrics-container" style="height: 420px; overflow-y: auto; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; background: white;">
+                <p style="color: var(--text-muted); text-align: center; margin-top: 40px;">YouTube linki girip 'Analiz Et' butonuna bastığınızda, şarkının sözleri burada gerçek zamanlı senkronize olarak akacaktır.</p>
+            </div>
+        </div>
+
+        <div class="glass-panel" style="flex: 1.2;">
+            <div class="panel-header">
+                <h4 class="panel-title"><i class="fa-solid fa-headphones" style="color: #8b5cf6;"></i> Şarkı Sözlüğü</h4>
+            </div>
+            
+            <div id="music-preview-box" style="padding: 16px; background: #f1f5f9; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 16px; font-size: 0.95rem; min-height: 55px; display: flex; align-items: center; justify-content: space-between;">
+                <span id="music-preview-text">Şarkı sözlerindeki bir kelimeye tıklayın...</span>
+                <button id="music-ask-tutor-btn" class="mini-btn" style="display:none; color: var(--primary); font-weight:700;" onclick="askTutorCurrentWord()">
+                    🤖 Hocaya Sor
+                </button>
+            </div>
+
+            <ul id="music-vocab-list" class="vocab-list"></ul>
+
+            <button class="action-btn" style="width:100%; background:#ef4444; justify-content: center;" onclick="clearList()">
+                <i class="fa-solid fa-trash-can"></i> Sözlüğü Temizle
+            </button>
+        </div>
+    </div>
+
+    <!-- AI CHAT BOTU (LINGOTUTOR) -->
+    <div id="ai-widget" onclick="toggleChat()" title="LingoTutor AI Asistanı">
+        <i class="fa-solid fa-robot"></i>
+    </div>
+
+    <div id="chat-window">
+        <div class="chat-header" id="chat-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-robot"></i>
+                <span>LingoTutor AI</span>
+            </div>
+            <div class="chat-header-actions">
+                <button class="header-icon-btn" onclick="openApiKeyModal()" title="API Anahtarı"><i class="fa-solid fa-key"></i></button>
+                <button class="header-icon-btn" onclick="clearChat()" title="Sohbeti Temizle"><i class="fa-solid fa-trash-can"></i></button>
+                <button class="header-icon-btn" onclick="toggleChat()" title="Kapat"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+
+        <div class="chat-body" id="chat-body">
+            <div class="msg bot">
+                👋 Merhaba! Ben senin kişisel İngilizce öğretmeninim. 
+                <br><br>
+                Bana bilmediğin kelimeleri, kalıpları veya gramer kurallarını sorabilir; yazdığın İngilizce cümleleri düzelttirebilir veya benimle İngilizce sohbet edebilirsin!
+            </div>
+        </div>
+
+        <!-- Hızlı Şablonlar -->
+        <div class="chat-chips">
+            <span class="chip" onclick="quickPrompt('Cümlemi düzelt ve açıkla: ')">✍️ Cümlemi Düzelt</span>
+            <span class="chip" onclick="quickPrompt('Let\'s have a casual English conversation! Ask me a question.')">💬 İngilizce Sohbet</span>
+            <span class="chip" onclick="quickPrompt('Şu kelimenin anlamını ve 3 örnek cümlesini verir misin: ')">❓ Kelime Sor</span>
+            <span class="chip" onclick="quickPrompt('Bu iki kelime arasındaki fark nedir: ')">🔍 Farkı Açıkla</span>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="İngilizce bir soru sorun veya cümle yazın..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="action-btn" style="margin:0; padding: 10px 14px;" onclick="sendMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- API KEY AYAR MODAL -->
+    <div id="api-modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-key" style="color: var(--primary);"></i> Google Gemini API Anahtarı
+            </h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                LingoTutor'un sınırsız çalışması için Google AI Studio'dan ücretsiz bir API anahtarı alabilirsiniz. Anahtar sadece tarayıcınızda saklanır.
+            </p>
+            <input type="text" id="api-key-input" placeholder="AIzaSy..." style="margin-bottom: 12px;">
+            <div style="font-size: 0.8rem; margin-bottom: 20px;">
+                👉 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary); font-weight: 600;">Buradan 1 dakikada ücretsiz anahtar alabilirsiniz.</a>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="action-btn" style="background:#64748b;" onclick="closeApiKeyModal()">Vazgeç</button>
+                <button class="action-btn" onclick="saveApiKey()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        
+        let myWords = JSON.parse(localStorage.getItem('myWords')) || [];
+        let player, lyricsInterval, speechObj, globalTextIndex = 0;
+        let lastSelectedWord = "";
+        let isUserScrolling = false;
+        let userScrollTimeout = null;
+
+        window.onload = () => {
+            updateList();
+            makeDraggable(document.getElementById("ai-widget"));
+            updateApiBadge();
+
+            // Kullanıcı şarkı sözlerini incelerken otomatik kaydırmanın zorlamasını engelle
+            const con = document.getElementById('lyrics-container');
+            if (con) {
+                const markUserScroll = () => {
+                    isUserScrolling = true;
+                    clearTimeout(userScrollTimeout);
+                    userScrollTimeout = setTimeout(() => {
+                        isUserScrolling = false;
+                    }, 3500); // 3.5 saniye sonra takibe devam et
+                };
+                con.addEventListener('wheel', markUserScroll, { passive: true });
+                con.addEventListener('touchmove', markUserScroll, { passive: true });
+            }
+        };
+
+        // --- API KEY YÖNETİMİ ---
+        function getApiKey() {
+            return localStorage.getItem('gemini_api_key') || '';
+        }
+        function openApiKeyModal() {
+            document.getElementById('api-key-input').value = getApiKey();
+            document.getElementById('api-modal').style.display = 'flex';
+        }
+        function closeApiKeyModal() {
+            document.getElementById('api-modal').style.display = 'none';
+        }
+        function saveApiKey() {
+            const val = document.getElementById('api-key-input').value.trim();
+            if (val) {
+                localStorage.setItem('gemini_api_key', val);
+                alert("✅ API Anahtarınız kaydedildi!");
+            } else {
+                localStorage.removeItem('gemini_api_key');
+                alert("API Anahtarı kaldırıldı.");
+            }
+            closeApiKeyModal();
+            updateApiBadge();
+        }
+        function updateApiBadge() {
+            const badge = document.getElementById('api-status-badge');
+            if (getApiKey()) {
+                badge.innerText = 'API Aktif ✅';
+                badge.parentElement.style.borderColor = '#10b981';
+                badge.parentElement.style.color = '#059669';
+            } else {
+                badge.innerText = 'API Anahtarı Ekle';
+                badge.parentElement.style.borderColor = '#cbd5e1';
+                badge.parentElement.style.color = '#475569';
+            }
+        }
+
+        let chatHistory = [];
+
+        // --- AI CHAT (LINGOTUTOR - STREAMING & HAFIZALI) ---
+        async function sendMessage(customText = null) {
+            const input = document.getElementById('chat-input');
+            const body = document.getElementById('chat-body');
+            const txt = customText || input.value.trim();
+            if(!txt) return;
+
+            // Kullanıcı mesajını ekrana bas
+            body.innerHTML += `<div class="msg user">${escapeHtml(txt)}</div>`;
+            if(!customText) input.value = '';
+            
+            // Yükleniyor animasyonu
+            const loaderId = 'loader-' + Date.now();
+            body.innerHTML += `<div class="typing-indicator" id="${loaderId}"><span></span><span></span><span></span></div>`;
+            body.scrollTop = body.scrollHeight;
+
+            // Aktif ekrandaki bağlamı yakala (Okuma metni veya şarkı sözü)
+            let activeContext = "";
+            const isMusicActive = document.getElementById('music-tab').classList.contains('active');
+            if (isMusicActive) {
+                const lyricsEl = document.getElementById('lyrics-container');
+                if (lyricsEl && lyricsEl.innerText.length > 20) {
+                    activeContext = "Şarkı Sözleri: " + lyricsEl.innerText.slice(0, 1200);
+                }
+            } else {
+                const storyEl = document.getElementById('input-text');
+                if (storyEl && storyEl.value.trim().length > 20) {
+                    activeContext = "Hikaye / Metin: " + storyEl.value.trim().slice(0, 1200);
+                }
+            }
+
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: txt,
+                        apiKey: getApiKey(),
+                        history: chatHistory,
+                        context: activeContext,
+                        stream: true
+                    })
+                });
+
+                document.getElementById(loaderId)?.remove();
+
+                // Eğer JSON yanıt geldiyse (API key yok uyarısı vb.)
+                const contentType = res.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await res.json();
+                    const formatted = marked.parse(data.reply || "Yanıt alınamadı.");
+                    body.innerHTML += `<div class="msg bot">${formatted}</div>`;
+                    if (data.need_api_key && !getApiKey()) {
+                        openApiKeyModal();
+                    }
+                    body.scrollTop = body.scrollHeight;
+                    return;
+                }
+
+                // STREAMING (SSE): Kelime kelime canlı dökülen yanıt!
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'msg bot';
+                body.appendChild(botMsgDiv);
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let fullReply = '';
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // Tamamlanmamış satırı sonraki döngüye sakla
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith('data: ')) {
+                            const payloadStr = trimmed.slice(6).trim();
+                            if (payloadStr === '[DONE]') break;
+                            try {
+                                const parsed = JSON.parse(payloadStr);
+                                if (parsed.text) {
+                                    fullReply += parsed.text;
+                                    botMsgDiv.innerHTML = marked.parse(fullReply);
+                                    body.scrollTop = body.scrollHeight;
+                                } else if (parsed.error) {
+                                    fullReply += `\n\n${parsed.error}`;
+                                    botMsgDiv.innerHTML = marked.parse(fullReply);
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+
+                // Konuşmayı hafızaya ekle
+                if (fullReply) {
+                    chatHistory.push({ role: 'user', text: txt });
+                    chatHistory.push({ role: 'model', text: fullReply });
+                    // Hafızada en fazla 12 mesaj tut (6 tur sohbet)
+                    if (chatHistory.length > 12) {
+                        chatHistory = chatHistory.slice(-12);
+                    }
+                }
+
+            } catch(e) {
+                document.getElementById(loaderId)?.remove();
+                body.innerHTML += `<div class="msg bot error">⚠️ Sunucuya bağlanılamadı. Lütfen sunucunun (api.py) çalıştığından emin olun.</div>`;
+            }
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function quickPrompt(prefix) {
+            const input = document.getElementById('chat-input');
+            input.value = prefix;
+            input.focus();
+            if (document.getElementById('chat-window').style.display !== 'flex') {
+                toggleChat();
+            }
+        }
+
+        function askTutorCurrentWord() {
+            if (!lastSelectedWord) return;
+            if (document.getElementById('chat-window').style.display !== 'flex') {
+                toggleChat();
+            }
+            sendMessage(`İngilizce "${lastSelectedWord}" kelimesini bana açıklar mısın? Anlamını, farklı kullanımlarını ve 2-3 örnek cümlesini Türkçe olarak verir misin?`);
+        }
+
+        function askAIToSummarize() {
+            const txt = document.getElementById('input-text').value.trim();
+            if (!txt) {
+                alert("Lütfen önce bir hikaye veya metin yapıştırın!");
+                return;
+            }
+            if (document.getElementById('chat-window').style.display !== 'flex') {
+                toggleChat();
+            }
+            sendMessage(`Aşağıdaki İngilizce metni basit bir dille özetle ve içindeki en önemli 5 kelimeyi Türkçe karşılıkları ve örnek cümleleriyle açıkla:\n\n"""${txt.slice(0, 1500)}"""`);
+        }
+
+        function clearChat() {
+            chatHistory = [];
+            document.getElementById('chat-body').innerHTML = `<div class="msg bot">👋 Sohbet ve hafıza temizlendi. Nasıl yardımcı olabilirim?</div>`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        // --- OKUMA & METİN İŞLEMLERİ ---
+        function toggleSpeech(force) {
+            if(!force && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                document.getElementById('speak-icon').className = 'fa-solid fa-play';
+                document.getElementById('speak-text').innerText = 'Dinle';
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const txt = document.getElementById('input-text').value.substring(globalTextIndex);
+            if(!txt.trim()) return;
+
+            speechObj = new SpeechSynthesisUtterance(txt);
+            speechObj.lang = 'en-US';
+            speechObj.rate = parseFloat(document.getElementById('speed-slider').value);
+            const start = globalTextIndex;
+            
+            speechObj.onboundary = (e) => {
+                globalTextIndex = start + e.charIndex;
+            };
+            speechObj.onend = () => {
+                document.getElementById('speak-icon').className = 'fa-solid fa-play';
+                document.getElementById('speak-text').innerText = 'Dinle';
+            };
+
+            window.speechSynthesis.speak(speechObj);
+            document.getElementById('speak-icon').className = 'fa-solid fa-pause';
+            document.getElementById('speak-text').innerText = 'Durdur';
+        }
+
+        function processContent() {
+            const txt = document.getElementById('input-text').value;
+            const con = document.getElementById('story-container');
+            con.innerHTML = '';
+            let charCount = 0;
+
+            txt.split('\n').forEach(line => {
+                const d = document.createElement('div');
+                line.split(' ').forEach(w => {
+                    const cleanWord = w.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "");
+                    const s = document.createElement('span');
+                    s.innerText = w + ' ';
+                    s.className = 'word';
+                    s.dataset.idx = charCount;
+                    
+                    if(cleanWord && myWords.some(m => m.w.toLowerCase() === cleanWord.toLowerCase())) {
+                        s.classList.add('active-word');
+                    }
+                    
+                    s.onclick = () => {
+                        translate(cleanWord || w);
+                        globalTextIndex = parseInt(s.dataset.idx);
+                    };
+                    s.ondblclick = () => {
+                        globalTextIndex = parseInt(s.dataset.idx);
+                        toggleSpeech(true);
+                    };
+                    
+                    d.appendChild(s);
+                    charCount += w.length + 1;
+                });
+                con.appendChild(d);
+                charCount++;
+            });
+        }
+
+        async function translate(w) {
+            const clean = w.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "").trim();
+            if (!clean) return;
+            
+            lastSelectedWord = clean;
+            const textSpans = [document.getElementById('preview-text'), document.getElementById('music-preview-text')];
+            const tutorBtns = [document.getElementById('ask-tutor-btn'), document.getElementById('music-ask-tutor-btn')];
+            
+            textSpans.forEach(s => { if(s) s.innerHTML = `<em>${clean}</em> aranıyor...`; });
+            tutorBtns.forEach(b => { if(b) b.style.display = 'inline-flex'; });
+
+            try {
+                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=en|tr`);
+                const data = await res.json();
+                const tr = (data.responseData?.translatedText || 'Çeviri bulunamadı').toLowerCase();
+                
+                textSpans.forEach(s => {
+                    if(s) s.innerHTML = `<b>${clean}</b>: <span style="color:#059669; font-weight:600;">${tr}</span>`;
+                });
+                
+                if(!myWords.some(m => m.w.toLowerCase() === clean.toLowerCase())) {
+                    myWords.push({w: clean, t: tr});
+                    localStorage.setItem('myWords', JSON.stringify(myWords));
+                    updateList();
+                    processContent();
+                    highlightWordsInLyrics();
+                }
+            } catch(e) {
+                textSpans.forEach(s => {
+                    if(s) s.innerHTML = `<b>${clean}</b>: (Çeviri servisine ulaşılamadı)`;
+                });
+            }
+        }
+
+        function highlightWordsInLyrics() {
+            document.querySelectorAll('#lyrics-container .word').forEach(wSpan => {
+                const clean = wSpan.innerText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'\s]/g, "");
+                if (clean && myWords.some(m => m.w.toLowerCase() === clean.toLowerCase())) {
+                    wSpan.classList.add('active-word');
+                }
+            });
+        }
+
+        function updateList() {
+            const lists = [document.getElementById('vocab-list'), document.getElementById('music-vocab-list')];
+            lists.forEach(l => {
+                if (!l) return;
+                l.innerHTML = '';
+                if (myWords.length === 0) {
+                    l.innerHTML = `<li style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding: 15px;">Henüz kaydedilen kelime yok.</li>`;
+                    return;
+                }
+                myWords.slice().reverse().forEach(m => {
+                    l.innerHTML += `
+                        <li class="vocab-item">
+                            <div><b>${m.w}</b> <span style="color:#64748b;">${m.t}</span></div>
+                            <div class="vocab-actions">
+                                <button class="mini-btn" title="Telaffuz" onclick="speakWord('${m.w}')"><i class="fa-solid fa-volume-high"></i></button>
+                                <button class="mini-btn" title="Hocaya Sor" onclick="askTutorSpecificWord('${m.w}')"><i class="fa-solid fa-robot"></i></button>
+                            </div>
+                        </li>`;
+                });
+            });
+        }
+
+        function speakWord(w) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(w);
+            u.lang = 'en-US';
+            window.speechSynthesis.speak(u);
+        }
+
+        function askTutorSpecificWord(w) {
+            if (document.getElementById('chat-window').style.display !== 'flex') {
+                toggleChat();
+            }
+            sendMessage(`"${w}" kelimesini detaylı açıkla, örnek cümleler ver ve benzer kelimelerden bahset.`);
+        }
+
+        function clearList() {
+            if (confirm("Kayıtlı kelimeleri silmek istediğinizden emin misiniz?")) {
+                myWords = [];
+                localStorage.removeItem('myWords');
+                updateList();
+                processContent();
+            }
+        }
+
+        function resetReadingPosition() {
+            window.speechSynthesis.cancel();
+            globalTextIndex = 0;
+            document.getElementById('speak-icon').className = 'fa-solid fa-play';
+            document.getElementById('speak-text').innerText = 'Dinle';
+        }
+
+        async function loadPDF(ev) {
+            const f = ev.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = async function() {
+                try {
+                    const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+                    let txt = "";
+                    const pagesToRead = Math.min(10, pdf.numPages);
+                    for(let i = 1; i <= pagesToRead; i++) {
+                        const page = await pdf.getPage(i);
+                        const content = await page.getTextContent();
+                        txt += content.items.map(s => s.str).join(" ") + "\n\n";
+                    }
+                    document.getElementById('input-text').value = txt;
+                    processContent();
+                } catch(e) {
+                    alert("PDF okunurken hata oluştu: " + e.message);
+                }
+            };
+            r.readAsArrayBuffer(f);
+        }
+
+        // --- AI KARAOKE ANALİZİ ---
+        async function analyzeWithAI() {
+            const url = document.getElementById('yt-url').value.trim();
+            if(!url) {
+                alert("Lütfen bir YouTube linki yapıştırın.");
+                return;
+            }
+            
+            const btn = document.getElementById('ai-btn');
+            const loader = document.getElementById('karaoke-loader');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Analiz...`;
+            loader.style.display = 'block';
+
+            try {
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await res.json();
+                loader.style.display = 'none';
+
+                if (data.error) {
+                    alert("⚠️ Hata: " + data.error);
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> Analiz Et`;
+                    return;
+                }
+
+                document.getElementById('video-wrapper').style.display = 'block';
+                
+                let vid = data.videoId || "";
+                if (!vid) {
+                    const match = url.match(/(?:v=|\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                    if (match) vid = match[1];
+                }
+
+                if(!player) {
+                    player = new YT.Player('yt-player', {
+                        videoId: vid,
+                        events: { 'onStateChange': onPlayerChange }
+                    });
+                } else {
+                    player.loadVideoById(vid);
+                }
+
+                renderLyrics(data.segments);
+            } catch(e) {
+                loader.style.display = 'none';
+                alert("⚠️ Sunucuya bağlanılamadı veya analiz sırasında hata oluştu: " + e.message);
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> Analiz Et`;
+        }
+
+        function renderLyrics(segs) {
+            const con = document.getElementById('lyrics-container');
+            con.innerHTML = '';
+            if (!segs || segs.length === 0) {
+                con.innerHTML = '<p style="text-align:center; color:#64748b;">Bu video için söz/transkript bulunamadı.</p>';
+                return;
+            }
+            segs.forEach(s => {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'lyric-line';
+                lineDiv.dataset.start = s.start;
+                lineDiv.dataset.end = s.end;
+                
+                // Çift tıklamada o saniyeden çal
+                lineDiv.ondblclick = () => seekToTime(s.start);
+
+                // Sol tarafa tek tıkla çal butonu
+                const playBtn = document.createElement('button');
+                playBtn.className = 'lyric-play-btn';
+                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                playBtn.title = 'Bu satırdan başlat';
+                playBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    seekToTime(s.start);
+                };
+                lineDiv.appendChild(playBtn);
+
+                // Kelimeleri tek tek span olarak ekle
+                const textSpan = document.createElement('span');
+                textSpan.className = 'lyric-text';
+                
+                const words = (s.text || "").split(' ');
+                words.forEach(w => {
+                    if (!w) return;
+                    const cleanWord = w.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "");
+                    const wSpan = document.createElement('span');
+                    wSpan.innerText = w + ' ';
+                    wSpan.className = 'word';
+                    
+                    if (cleanWord && myWords.some(m => m.w.toLowerCase() === cleanWord.toLowerCase())) {
+                        wSpan.classList.add('active-word');
+                    }
+
+                    // Tek tık: Kelimeyi Türkçeye çevir
+                    wSpan.onclick = (e) => {
+                        e.stopPropagation();
+                        translate(cleanWord || w);
+                    };
+
+                    // Çift tık: O saniyeden devam et
+                    wSpan.ondblclick = (e) => {
+                        e.stopPropagation();
+                        seekToTime(s.start);
+                    };
+
+                    textSpan.appendChild(wSpan);
+                });
+
+                lineDiv.appendChild(textSpan);
+                con.appendChild(lineDiv);
+            });
+        }
+
+        function seekToTime(seconds) {
+            if (player && player.seekTo) {
+                player.seekTo(seconds, true);
+                player.playVideo();
+            }
+        }
+
+        function onPlayerChange(e) {
+            if(e.data == YT.PlayerState.PLAYING) {
+                if (lyricsInterval) clearInterval(lyricsInterval);
+                lyricsInterval = setInterval(() => {
+                    if (!player || typeof player.getCurrentTime !== 'function') return;
+                    const t = player.getCurrentTime();
+                    const lines = document.querySelectorAll('.lyric-line');
+                    const con = document.getElementById('lyrics-container');
+
+                    lines.forEach(l => {
+                        const start = parseFloat(l.dataset.start);
+                        const end = parseFloat(l.dataset.end);
+                        if(t >= start && t <= end) {
+                            if (!l.classList.contains('active-line')) {
+                                lines.forEach(other => other.classList.remove('active-line'));
+                                l.classList.add('active-line');
+                                
+                                // DİKKAT: Sayfayı (window) asla kaydırma!
+                                // Sadece lyrics-container'ın kendi içini ortala!
+                                if (!isUserScrolling && con) {
+                                    const targetScroll = l.offsetTop - con.offsetTop - (con.clientHeight / 2) + (l.clientHeight / 2);
+                                    con.scrollTo({
+                                        top: Math.max(0, targetScroll),
+                                        behavior: 'smooth'
+                                    });
+                                }
+                            }
+                        }
+                    });
+                }, 200);
+            } else {
+                clearInterval(lyricsInterval);
+            }
+        }
+
+        // --- GENEL ARAYÜZ FONKSİYONLARI ---
+        function toggleChat() {
+            const c = document.getElementById('chat-window');
+            c.style.display = (c.style.display === 'flex') ? 'none' : 'flex';
+            if (c.style.display === 'flex') {
+                document.getElementById('chat-input').focus();
+            }
+        }
+
+        function switchTab(t) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(t + '-tab').classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function makeDraggable(e) {
+            let p1=0, p2=0, p3=0, p4=0;
+            e.onmousedown = (ev) => {
+                ev.preventDefault();
+                p3 = ev.clientX;
+                p4 = ev.clientY;
+                document.onmouseup = () => {
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                };
+                document.onmousemove = (ev2) => {
+                    p1 = p3 - ev2.clientX;
+                    p2 = p4 - ev2.clientY;
+                    p3 = ev2.clientX;
+                    p4 = ev2.clientY;
+                    e.style.top = (e.offsetTop - p2) + "px";
+                    e.style.left = (e.offsetLeft - p1) + "px";
+                };
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.vs/
+venv/
+.venv/
+.env
+ngrok.exe
+model/
+*.part
+*.webm
+*.mp3
+*.wav
+*.m4a
+temp_audio*
+.DS_Store
